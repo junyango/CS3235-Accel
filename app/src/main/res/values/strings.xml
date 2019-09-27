@@ -1,0 +1,15 @@
+<resources>
+    <string name="app_name">Accelerometer</string>
+    <string name="startBtn">Start</string>
+    <string-array name = "refresh_rate">
+        <item>UI</item>
+        <item>Normal</item>
+        <item>Game</item>
+        <item>Fastest</item>
+    </string-array>
+    <string name="spinnerText">Refresh Rate</string>
+    <string name="editTextTitle">Please enter number of seconds to test</string>
+    <string name="secondsHint">Seconds</string>
+    <string name="uploadBtn">Upload</string>
+    <string name="selectBtn">Select File</string>
+</resources>
