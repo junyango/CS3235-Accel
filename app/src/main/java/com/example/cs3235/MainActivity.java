@@ -56,7 +56,8 @@ public class MainActivity extends AppCompatActivity {
     private TextView x_accel, y_accel, z_accel;
     private SensorManager sensorManager;
     private Sensor accelerometer;
-    private SensorEventListener accelEventListener;
+    private Sensor gyroscope;
+    private SensorEventListener sensorEventListener;
 
     // Variables for XML elements UI display
     private Button startBtn;
@@ -124,33 +125,48 @@ public class MainActivity extends AppCompatActivity {
         sensorManager = (SensorManager) getSystemService(Context.SENSOR_SERVICE);
         try {
             accelerometer = sensorManager.getDefaultSensor(Sensor.TYPE_ACCELEROMETER);
+            gyroscope = sensorManager.getDefaultSensor(Sensor.TYPE_GYROSCOPE);
         } catch (NullPointerException npe) {
             Toast toast = Toast.makeText(this, "This device does not support Gyroscope", Toast.LENGTH_SHORT);
             toast.show();
             finish();
         }
 
-        accelEventListener = new SensorEventListener() {
+        sensorEventListener = new SensorEventListener() {
+            // Declaring variables to store sensor values to be input to writer library
+            float accelX_value, accelY_value, accelZ_value;
+            float gyroX_value, gyroY_value, gyroZ_value;
             @Override
             public void onSensorChanged(SensorEvent event) {
                 Sensor sensor = event.sensor;
-                if (sensor.getType() == Sensor.TYPE_ACCELEROMETER && isStartPressed && mTimerRunning && isSetPressed) {
-                    Log.d(TAG, "onSensorChanged: X: " + event.values[0] + "Y: " + event.values[1] + "Z: " + event.values[2]);
-                    x_accel.setText("X: " + event.values[0]);
-                    y_accel.setText("Y: " + event.values[1]);
-                    z_accel.setText("Z: " + event.values[2]);
+                if (isStartPressed && mTimerRunning && isSetPressed) {
+                    // Getting initial timer counter
+                    float currTime = System.currentTimeMillis();
+                    if (sensor.getType() == Sensor.TYPE_ACCELEROMETER) {
+                        accelX_value = event.values[0];
+                        accelY_value = event.values[1];
+                        accelZ_value = event.values[2];
+                    } else {
+                        // Display error. Click on start button to use
+                        x_accel.setText("");
+                        y_accel.setText("Please press start button to use");
+                        z_accel.setText("");
+                    }
+                    if (sensor.getType() == Sensor.TYPE_GYROSCOPE) {
+                        gyroX_value = event.values[0];
+                        gyroY_value = event.values[1];
+                        gyroZ_value = event.values[2];
+                    }
+                    Log.d(TAG, "onSensorChanged Accel: X: " + accelX_value + "Y: " + accelY_value + "Z: " + accelZ_value);
+                    Log.d(TAG, "onSensorChanged Gyro: X: " + gyroX_value + "Y: " + gyroY_value + "Z: " + gyroZ_value);
 
                     try {
-                        writer.write(String.format("%s, %f, %f, %f\n", SystemClock.elapsedRealtimeNanos(), event.values[0], event.values[1], event.values[2]));
+                        writer.write(String.format(Locale.getDefault(), "%s, %f, %f, %f, %f, %f, %f\n", SystemClock.elapsedRealtimeNanos(),
+                                accelX_value, accelY_value, accelZ_value, gyroX_value, gyroY_value, gyroZ_value));
                         writer.flush();
                     } catch (IOException io) {
                         Log.d(TAG, "Input output exception!" + io);
                     }
-                } else {
-                    // Display error. Click on start button to use
-                    x_accel.setText("");
-                    y_accel.setText("Please press start button to use");
-                    z_accel.setText("");
                 }
             }
 
@@ -198,21 +214,26 @@ public class MainActivity extends AppCompatActivity {
             public void onItemSelected(AdapterView<?> parent, View view, int position, long id) {
                 String option = parent.getItemAtPosition(position).toString();
                 // Unregistering the listener before setting a new refresh rate
-                sensorManager.unregisterListener(accelEventListener);
+                sensorManager.unregisterListener(sensorEventListener);
 
                 // Todo: Add customized frequency based on requirements
                 switch (option) {
                     case "UI": // 16.667 Hz
-                        sensorManager.registerListener(accelEventListener, accelerometer, SensorManager.SENSOR_DELAY_UI);
+                        sensorManager.registerListener(sensorEventListener, accelerometer, SensorManager.SENSOR_DELAY_UI);
+                        sensorManager.registerListener(sensorEventListener, gyroscope, SensorManager.SENSOR_DELAY_UI);
                         break;
                     case "Normal": // 5Hz
-                        sensorManager.registerListener(accelEventListener, accelerometer, SensorManager.SENSOR_DELAY_NORMAL);
+                        sensorManager.registerListener(sensorEventListener, accelerometer, SensorManager.SENSOR_DELAY_NORMAL);
+                        sensorManager.registerListener(sensorEventListener, gyroscope, SensorManager.SENSOR_DELAY_NORMAL);
+                        break;
                     case "Game": // 50hz
-                        sensorManager.registerListener(accelEventListener, accelerometer, SensorManager.SENSOR_DELAY_GAME);
+                        sensorManager.registerListener(sensorEventListener, accelerometer, SensorManager.SENSOR_DELAY_GAME);
+                        sensorManager.registerListener(sensorEventListener, gyroscope, SensorManager.SENSOR_DELAY_GAME);
+                        break;
                     case "Fastest": // 0 Microseconds delay
-                        sensorManager.registerListener(accelEventListener, accelerometer, SensorManager.SENSOR_DELAY_FASTEST);
-                    default:
-                        sensorManager.registerListener(accelEventListener, accelerometer, SensorManager.SENSOR_DELAY_UI);
+                        sensorManager.registerListener(sensorEventListener, accelerometer, SensorManager.SENSOR_DELAY_FASTEST);
+                        sensorManager.registerListener(sensorEventListener, gyroscope, SensorManager.SENSOR_DELAY_FASTEST);
+                        break;
                 }
 
             }
@@ -315,13 +336,14 @@ public class MainActivity extends AppCompatActivity {
     @Override
     protected void onResume() {
         super.onResume();
-        sensorManager.registerListener(accelEventListener, accelerometer, SensorManager.SENSOR_DELAY_UI);
+        sensorManager.registerListener(sensorEventListener, accelerometer, SensorManager.SENSOR_DELAY_UI);
+        sensorManager.registerListener(sensorEventListener, gyroscope, SensorManager.SENSOR_DELAY_UI);
     }
 
     @Override
     protected void onPause() {
         super.onPause();
-        sensorManager.unregisterListener(accelEventListener);
+        sensorManager.unregisterListener(sensorEventListener);
     }
 
     private String getStorageDir() {
