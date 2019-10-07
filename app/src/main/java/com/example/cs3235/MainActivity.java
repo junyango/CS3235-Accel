@@ -42,7 +42,7 @@ import java.util.Locale;
 public class MainActivity extends AppCompatActivity {
 
     // Global variables
-    private static final String refresh_rate = "UI";
+    private static final String refresh_rate = "50hz";
     private static final String alphabet = "a";
 
     // Used for logging on logcat
@@ -278,7 +278,7 @@ public class MainActivity extends AppCompatActivity {
                     Log.e(TAG, "Error in IO when closing writer");
                 }
                 Uri file = Uri.fromFile(new File(fileDir));
-                StorageReference csvRef = mStorageRef.child("test/" + file.getLastPathSegment());
+                StorageReference csvRef = mStorageRef.child("blue_huawei/" + refresh_rate + "/" + file.getLastPathSegment());
                 final ProgressDialog progressDialog = new ProgressDialog(MainActivity.this);
                 progressDialog.setTitle("Progress...");
 
@@ -336,8 +336,8 @@ public class MainActivity extends AppCompatActivity {
     @Override
     protected void onResume() {
         super.onResume();
-        sensorManager.registerListener(sensorEventListener, accelerometer, SensorManager.SENSOR_DELAY_UI);
-        sensorManager.registerListener(sensorEventListener, gyroscope, SensorManager.SENSOR_DELAY_UI);
+        sensorManager.registerListener(sensorEventListener, accelerometer, SensorManager.SENSOR_DELAY_GAME);
+        sensorManager.registerListener(sensorEventListener, gyroscope, SensorManager.SENSOR_DELAY_GAME);
     }
 
     @Override
