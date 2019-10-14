@@ -1,8 +1,5 @@
 package com.example.cs3235;
 
-import androidx.annotation.NonNull;
-import androidx.appcompat.app.AppCompatActivity;
-
 import android.app.ProgressDialog;
 import android.content.Context;
 import android.hardware.Sensor;
@@ -13,6 +10,8 @@ import android.net.Uri;
 import android.os.Bundle;
 import android.os.CountDownTimer;
 import android.os.SystemClock;
+import android.text.Editable;
+import android.text.TextWatcher;
 import android.util.Log;
 import android.view.View;
 import android.view.inputmethod.InputMethodManager;
@@ -24,10 +23,13 @@ import android.widget.Spinner;
 import android.widget.TextView;
 import android.widget.Toast;
 
+import androidx.annotation.NonNull;
+import androidx.appcompat.app.AppCompatActivity;
+
 import com.google.android.gms.tasks.OnFailureListener;
+import com.google.android.gms.tasks.OnSuccessListener;
 import com.google.firebase.storage.FirebaseStorage;
 import com.google.firebase.storage.OnProgressListener;
-import com.google.android.gms.tasks.OnSuccessListener;
 import com.google.firebase.storage.StorageReference;
 import com.google.firebase.storage.UploadTask;
 
@@ -42,8 +44,13 @@ import java.util.Locale;
 public class MainActivity extends AppCompatActivity {
 
     // Global variables
-    private static final String refresh_rate = "50hz";
-    private static final String alphabet = "a";
+    private static final String refresh_rate = "100hz";
+    private static final String alphabet = "i";
+    private static final String phone = "blue_huawei";
+    private static String keyPressedFlag = "";
+
+    private static float accelX_value, accelY_value, accelZ_value;
+    private static float gyroX_value, gyroY_value, gyroZ_value;
 
     // Used for logging on logcat
     private static final String TAG = "MainActivity";
@@ -77,7 +84,6 @@ public class MainActivity extends AppCompatActivity {
     // Firebase storage
     private StorageReference mStorageRef;
     private Uri filePath;
-
 
     @Override
     protected void onCreate(Bundle savedInstanceState) {
@@ -134,39 +140,38 @@ public class MainActivity extends AppCompatActivity {
 
         sensorEventListener = new SensorEventListener() {
             // Declaring variables to store sensor values to be input to writer library
-            float accelX_value, accelY_value, accelZ_value;
-            float gyroX_value, gyroY_value, gyroZ_value;
             @Override
             public void onSensorChanged(SensorEvent event) {
                 Sensor sensor = event.sensor;
                 if (isStartPressed && mTimerRunning && isSetPressed) {
-                    // Getting initial timer counter
-                    float currTime = System.currentTimeMillis();
                     if (sensor.getType() == Sensor.TYPE_ACCELEROMETER) {
                         accelX_value = event.values[0];
                         accelY_value = event.values[1];
                         accelZ_value = event.values[2];
-                    } else {
-                        // Display error. Click on start button to use
-                        x_accel.setText("");
-                        y_accel.setText("Please press start button to use");
-                        z_accel.setText("");
+                        try {
+                            writer.write(String.format(Locale.getDefault(), "%s, %f, %f, %f, %s\n", SystemClock.elapsedRealtimeNanos(),
+                                    accelX_value, accelY_value, accelZ_value, "accel"));
+                            writer.flush();
+                        } catch (IOException io) {
+                            Log.d(TAG, "Input output exception!" + io);
+                        }
                     }
-                    if (sensor.getType() == Sensor.TYPE_GYROSCOPE) {
+                    else if (sensor.getType() == Sensor.TYPE_GYROSCOPE) {
                         gyroX_value = event.values[0];
                         gyroY_value = event.values[1];
                         gyroZ_value = event.values[2];
+                        try {
+                            writer.write(String.format(Locale.getDefault(), "%s, %f, %f, %f, %s\n", SystemClock.elapsedRealtimeNanos(),
+                                    gyroX_value, gyroY_value, gyroZ_value, "gyro"));
+                            writer.flush();
+                        } catch (IOException io) {
+                            Log.d(TAG, "Input output exception!" + io);
+                        }
                     }
-                    Log.d(TAG, "onSensorChanged Accel: X: " + accelX_value + "Y: " + accelY_value + "Z: " + accelZ_value);
-                    Log.d(TAG, "onSensorChanged Gyro: X: " + gyroX_value + "Y: " + gyroY_value + "Z: " + gyroZ_value);
+//                    Log.d(TAG, "onSensorChanged Accel: X: " + accelX_value + "Y: " + accelY_value + "Z: " + accelZ_value);
+//                    Log.d(TAG, "onSensorChanged Gyro: X: " + gyroX_value + "Y: " + gyroY_value + "Z: " + gyroZ_value);
 
-                    try {
-                        writer.write(String.format(Locale.getDefault(), "%s, %f, %f, %f, %f, %f, %f\n", SystemClock.elapsedRealtimeNanos(),
-                                accelX_value, accelY_value, accelZ_value, gyroX_value, gyroY_value, gyroZ_value));
-                        writer.flush();
-                    } catch (IOException io) {
-                        Log.d(TAG, "Input output exception!" + io);
-                    }
+
                 }
             }
 
@@ -205,8 +210,34 @@ public class MainActivity extends AppCompatActivity {
             }
         });
 
+        mKeyboard.addTextChangedListener(new TextWatcher() {
+             @Override
+             public void beforeTextChanged(CharSequence s, int start, int count, int after) {
+
+             }
+
+             @Override
+             public void onTextChanged(CharSequence s, int start, int before, int count) {
+                 keyPressedFlag = "Tapped";
+                 try {
+                     writer.write(String.format(Locale.getDefault(), "%s, %f, %f, %f, %s\n", SystemClock.elapsedRealtimeNanos(),
+                             -3.0, -3.0, -3.0, keyPressedFlag));
+                     writer.flush();
+                 } catch (IOException io) {
+                     Log.d(TAG, "Input output exception!" + io);
+                 }
+             }
+
+             @Override
+             public void afterTextChanged(Editable s) {
+
+             }
+         });
+
+
+
         // Setting up for spinner
-        ArrayAdapter<CharSequence> adapter = ArrayAdapter.createFromResource(MainActivity.this, R.array.refresh_rate, android.R.layout.simple_spinner_item);
+        ArrayAdapter < CharSequence > adapter = ArrayAdapter.createFromResource(MainActivity.this, R.array.refresh_rate, android.R.layout.simple_spinner_item);
         adapter.setDropDownViewResource(android.R.layout.simple_spinner_dropdown_item);
         spinner.setAdapter(adapter);
         spinner.setOnItemSelectedListener(new AdapterView.OnItemSelectedListener() {
@@ -231,8 +262,8 @@ public class MainActivity extends AppCompatActivity {
                         sensorManager.registerListener(sensorEventListener, gyroscope, SensorManager.SENSOR_DELAY_GAME);
                         break;
                     case "Fastest": // 0 Microseconds delay
-                        sensorManager.registerListener(sensorEventListener, accelerometer, SensorManager.SENSOR_DELAY_FASTEST);
-                        sensorManager.registerListener(sensorEventListener, gyroscope, SensorManager.SENSOR_DELAY_FASTEST);
+                        sensorManager.registerListener(sensorEventListener, accelerometer, 10000);
+                        sensorManager.registerListener(sensorEventListener, gyroscope, 10000);
                         break;
                 }
 
@@ -245,6 +276,7 @@ public class MainActivity extends AppCompatActivity {
         });
 
     }
+
     private void resetTimer() {
         mTimeLeftInMillis = mStartTimeInMillis;
         updateCountDownText();
@@ -278,7 +310,7 @@ public class MainActivity extends AppCompatActivity {
                     Log.e(TAG, "Error in IO when closing writer");
                 }
                 Uri file = Uri.fromFile(new File(fileDir));
-                StorageReference csvRef = mStorageRef.child("blue_huawei/" + refresh_rate + "/" + file.getLastPathSegment());
+                StorageReference csvRef = mStorageRef.child(phone + "/" + refresh_rate + "/" + file.getLastPathSegment());
                 final ProgressDialog progressDialog = new ProgressDialog(MainActivity.this);
                 progressDialog.setTitle("Progress...");
 
