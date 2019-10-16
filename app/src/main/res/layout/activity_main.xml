@@ -89,11 +89,14 @@
         android:layout_gravity="center"
         android:text="@string/startBtn" />
 
-    <EditText
+    <com.example.cs3235.CustomEditText
         android:id="@+id/keyboard"
         android:layout_width="match_parent"
         android:layout_height="wrap_content"
         android:layout_marginTop="10dp"
+        android:importantForAutofill="no"
+        android:inputType="text"
+        android:imeOptions="actionDone"
     />
 
 </LinearLayout>

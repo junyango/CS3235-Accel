@@ -13,6 +13,7 @@ import android.os.SystemClock;
 import android.text.Editable;
 import android.text.TextWatcher;
 import android.util.Log;
+import android.view.KeyEvent;
 import android.view.View;
 import android.view.inputmethod.InputMethodManager;
 import android.widget.AdapterView;
@@ -45,12 +46,8 @@ public class MainActivity extends AppCompatActivity {
 
     // Global variables
     private static final String refresh_rate = "100hz";
-    private static final String alphabet = "i";
-    private static final String phone = "blue_huawei";
-    private static String keyPressedFlag = "";
-
-    private static float accelX_value, accelY_value, accelZ_value;
-    private static float gyroX_value, gyroY_value, gyroZ_value;
+    private static final String alphabet = "a";
+    private static final String phone = "black_huawei";
 
     // Used for logging on logcat
     private static final String TAG = "MainActivity";
@@ -73,7 +70,7 @@ public class MainActivity extends AppCompatActivity {
     private boolean isSetPressed;
     private EditText mEditTextInput;
     private Button mButtonSet;
-    private EditText mKeyboard;
+    public CustomEditText mKeyboard;
 
     private TextView mTextViewCountDown;
     private CountDownTimer mCountDownTimer;
@@ -89,6 +86,8 @@ public class MainActivity extends AppCompatActivity {
     protected void onCreate(Bundle savedInstanceState) {
         super.onCreate(savedInstanceState);
         setContentView(R.layout.activity_main);
+
+        mKeyboard = new CustomEditText(getApplicationContext());
 
         x_accel = findViewById(R.id.xAccel);
         y_accel = findViewById(R.id.yAccel);
@@ -142,6 +141,8 @@ public class MainActivity extends AppCompatActivity {
             // Declaring variables to store sensor values to be input to writer library
             @Override
             public void onSensorChanged(SensorEvent event) {
+                float accelX_value, accelY_value, accelZ_value;
+                float gyroX_value, gyroY_value, gyroZ_value;
                 Sensor sensor = event.sensor;
                 if (isStartPressed && mTimerRunning && isSetPressed) {
                     if (sensor.getType() == Sensor.TYPE_ACCELEROMETER) {
@@ -168,10 +169,6 @@ public class MainActivity extends AppCompatActivity {
                             Log.d(TAG, "Input output exception!" + io);
                         }
                     }
-//                    Log.d(TAG, "onSensorChanged Accel: X: " + accelX_value + "Y: " + accelY_value + "Z: " + accelZ_value);
-//                    Log.d(TAG, "onSensorChanged Gyro: X: " + gyroX_value + "Y: " + gyroY_value + "Z: " + gyroZ_value);
-
-
                 }
             }
 
@@ -210,30 +207,59 @@ public class MainActivity extends AppCompatActivity {
             }
         });
 
-        mKeyboard.addTextChangedListener(new TextWatcher() {
-             @Override
-             public void beforeTextChanged(CharSequence s, int start, int count, int after) {
+        mKeyboard.setOnKeyListener(new View.OnKeyListener() {
+                                       @Override
+                                       public boolean onKey(View v, int keyCode, KeyEvent event) {
+                                           if(event.getAction() == KeyEvent.ACTION_DOWN) {
+                                               Log.d(TAG, "Tapped");
+                                               try {
+                                                   writer.write(String.format(Locale.getDefault(), "%s, %f, %f, %f, %s\n", SystemClock.elapsedRealtimeNanos(),
+                                                           -3.0, -3.0, -3.0, "Tapped"));
+                                                   writer.flush();
+                                               } catch (IOException io) {
+                                                   Log.d(TAG, "Input output exception!" + io);
+                                               }
+                                               return false;
+                                           }
+                                           else if(event.getAction() == KeyEvent.ACTION_UP) {
+                                               Log.d(TAG, "Released");
+                                               try {
+                                                   writer.write(String.format(Locale.getDefault(), "%s, %f, %f, %f, %s\n", SystemClock.elapsedRealtimeNanos(),
+                                                           -3.0, -3.0, -3.0, "Released"));
+                                                   writer.flush();
+                                               } catch (IOException io) {
+                                                   Log.d(TAG, "Input output exception!" + io);
+                                               }
+                                               return false;
+                                           }
+                                           return false;
+                                       }
+                                   });
 
-             }
 
-             @Override
-             public void onTextChanged(CharSequence s, int start, int before, int count) {
-                 keyPressedFlag = "Tapped";
-                 try {
-                     writer.write(String.format(Locale.getDefault(), "%s, %f, %f, %f, %s\n", SystemClock.elapsedRealtimeNanos(),
-                             -3.0, -3.0, -3.0, keyPressedFlag));
-                     writer.flush();
-                 } catch (IOException io) {
-                     Log.d(TAG, "Input output exception!" + io);
-                 }
-             }
-
-             @Override
-             public void afterTextChanged(Editable s) {
-
-             }
-         });
-
+//        mKeyboard.addTextChangedListener(new TextWatcher() {
+//             @Override
+//             public void beforeTextChanged(CharSequence s, int start, int count, int after) {
+//
+//             }
+//
+//             @Override
+//             public void onTextChanged(CharSequence s, int start, int before, int count) {
+//                 keyPressedFlag = "Tapped";
+//                 try {
+//                     writer.write(String.format(Locale.getDefault(), "%s, %f, %f, %f, %s\n", SystemClock.elapsedRealtimeNanos(),
+//                             -3.0, -3.0, -3.0, keyPressedFlag));
+//                     writer.flush();
+//                 } catch (IOException io) {
+//                     Log.d(TAG, "Input output exception!" + io);
+//                 }
+//             }
+//
+//             @Override
+//             public void afterTextChanged(Editable s) {
+//
+//             }
+//         });
 
 
         // Setting up for spinner

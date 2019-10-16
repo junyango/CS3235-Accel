@@ -24,7 +24,6 @@ public class CustomEditText extends EditText {
         super(context);
     }
 
-
     @Override
     public InputConnection onCreateInputConnection(EditorInfo outAttrs) {
         return new BaseInputConnection(this, false);
@@ -36,6 +35,7 @@ public class CustomEditText extends EditText {
     public boolean onKeyDown(int keyCode, KeyEvent event) {
         return super.onKeyUp(keyCode, event);
     }
+
 
 //    @Override
 //    public boolean dispatchKeyEvent(KeyEvent event) {
