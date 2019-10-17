@@ -1,5 +1,6 @@
 package com.example.cs3235;
 
+import android.app.AlertDialog;
 import android.app.ProgressDialog;
 import android.content.Context;
 import android.hardware.Sensor;
@@ -10,8 +11,6 @@ import android.net.Uri;
 import android.os.Bundle;
 import android.os.CountDownTimer;
 import android.os.SystemClock;
-import android.text.Editable;
-import android.text.TextWatcher;
 import android.util.Log;
 import android.view.KeyEvent;
 import android.view.View;
@@ -46,8 +45,8 @@ public class MainActivity extends AppCompatActivity {
 
     // Global variables
     private static final String refresh_rate = "100hz";
-    private static final String alphabet = "a";
-    private static final String phone = "black_huawei";
+    private static final String alphabet = "z";
+    private static final String phone = "blue_huawei";
 
     // Used for logging on logcat
     private static final String TAG = "MainActivity";
@@ -102,6 +101,8 @@ public class MainActivity extends AppCompatActivity {
         // Firebase storage
         mStorageRef = FirebaseStorage.getInstance("gs://cs3235-92947.appspot.com").getReference();
 
+        // Prevent unnecessary tapping of EditText field before setting timer which causes app to crash
+        mKeyboard.setVisibility(View.INVISIBLE);
 
         mButtonSet.setOnClickListener(new View.OnClickListener(){
             @Override
@@ -199,6 +200,7 @@ public class MainActivity extends AppCompatActivity {
                     startTimer();
                     mButtonSet.setEnabled(false);
                     startBtn.setEnabled(false);
+                    mKeyboard.setVisibility(View.VISIBLE);
                     mKeyboard.requestFocus();
                     InputMethodManager imm = (InputMethodManager) getSystemService(Context.INPUT_METHOD_SERVICE);
                     imm.showSoftInput(mKeyboard, InputMethodManager.SHOW_IMPLICIT);
@@ -235,32 +237,6 @@ public class MainActivity extends AppCompatActivity {
                                            return false;
                                        }
                                    });
-
-
-//        mKeyboard.addTextChangedListener(new TextWatcher() {
-//             @Override
-//             public void beforeTextChanged(CharSequence s, int start, int count, int after) {
-//
-//             }
-//
-//             @Override
-//             public void onTextChanged(CharSequence s, int start, int before, int count) {
-//                 keyPressedFlag = "Tapped";
-//                 try {
-//                     writer.write(String.format(Locale.getDefault(), "%s, %f, %f, %f, %s\n", SystemClock.elapsedRealtimeNanos(),
-//                             -3.0, -3.0, -3.0, keyPressedFlag));
-//                     writer.flush();
-//                 } catch (IOException io) {
-//                     Log.d(TAG, "Input output exception!" + io);
-//                 }
-//             }
-//
-//             @Override
-//             public void afterTextChanged(Editable s) {
-//
-//             }
-//         });
-
 
         // Setting up for spinner
         ArrayAdapter < CharSequence > adapter = ArrayAdapter.createFromResource(MainActivity.this, R.array.refresh_rate, android.R.layout.simple_spinner_item);
