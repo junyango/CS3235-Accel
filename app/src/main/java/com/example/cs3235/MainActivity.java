@@ -1,5 +1,29 @@
 package com.example.cs3235;
 
+//import android.app.Activity;
+//import android.os.Bundle;
+//
+//public class MainActivity extends Activity {
+//
+//    CustomKeyboard mCustomKeyboard;
+//
+//    @Override protected void onCreate(Bundle savedInstanceState) {
+//        super.onCreate(savedInstanceState);
+//        setContentView(R.layout.activity_main);
+//
+//        mCustomKeyboard= new CustomKeyboard(this, R.id.keyboardview, R.xml.number_pad);
+//
+//        mCustomKeyboard.registerEditText(R.id.keyboard);
+//    }
+//
+//    @Override public void onBackPressed() {
+//        // NOTE Trap the back key: when the CustomKeyboard is still visible hide it, only when it is invisible, finish activity
+//        if( mCustomKeyboard.isCustomKeyboardVisible() ) mCustomKeyboard.hideCustomKeyboard(); else this.finish();
+//    }
+//
+//}
+
+
 import android.annotation.SuppressLint;
 import android.app.ProgressDialog;
 import android.content.Context;
@@ -13,6 +37,7 @@ import android.os.CountDownTimer;
 import android.os.SystemClock;
 import android.util.Log;
 import android.view.View;
+import android.view.WindowManager;
 import android.view.inputmethod.InputMethodManager;
 import android.widget.AdapterView;
 import android.widget.ArrayAdapter;
@@ -82,7 +107,7 @@ public class MainActivity extends AppCompatActivity {
     private StorageReference mStorageRef;
     private Uri filePath;
 
-    CustomKeyboard mCustomKeyboard;
+    private CustomKeyboard mCustomKeyboard;
 
     @SuppressLint("ClickableViewAccessibility")
     @Override
@@ -98,6 +123,11 @@ public class MainActivity extends AppCompatActivity {
         spinner = findViewById(R.id.refresh_spinner);
         startBtn = findViewById(R.id.startBtn);
         mKeyboard = findViewById(R.id.keyboard);
+
+        mCustomKeyboard= new CustomKeyboard(this, R.id.keyboardview, R.xml.number_pad);
+        mCustomKeyboard.registerEditText(R.id.keyboard);
+
+        getWindow().setSoftInputMode(WindowManager.LayoutParams.SOFT_INPUT_ADJUST_PAN);
 
         // Firebase storage
         mStorageRef = FirebaseStorage.getInstance("gs://cs3235-92947.appspot.com").getReference();
@@ -200,24 +230,13 @@ public class MainActivity extends AppCompatActivity {
                     mButtonSet.setEnabled(false);
                     startBtn.setEnabled(false);
                     mKeyboard.setVisibility(View.VISIBLE);
+//                    mKeyboard.requestFocus();
 //                    InputMethodManager imm = (InputMethodManager) getSystemService(Context.INPUT_METHOD_SERVICE);
 //                    imm.showSoftInput(mKeyboard, InputMethodManager.SHOW_IMPLICIT);
                 }
 
             }
         });
-//        mKeyboard.setOnTouchListener(new View.OnTouchListener() {
-//            @Override
-//            public boolean onTouch(View v, MotionEvent event) {
-//                if(mKeyboard.hasFocus()) {
-//                    customKeyboard.showCustomKeyboard(v);
-//                } else {
-//                    customKeyboard.hideCustomKeyboard();
-//                }
-//                return false;
-//
-//            }
-//        });
 //        mKeyboard.setOnKeyListener(new View.OnKeyListener() {
 //                                       @Override
 //                                       public boolean onKey(View v, int keyCode, KeyEvent event) {
@@ -392,5 +411,10 @@ public class MainActivity extends AppCompatActivity {
     private String getStorageDir() {
         return this.getExternalFilesDir(null).getAbsolutePath();
     }
+    @Override public void onBackPressed() {
+        // NOTE Trap the back key: when the CustomKeyboard is still visible hide it, only when it is invisible, finish activity
+        if( mCustomKeyboard.isCustomKeyboardVisible() ) mCustomKeyboard.hideCustomKeyboard(); else this.finish();
+    }
 
 }
+

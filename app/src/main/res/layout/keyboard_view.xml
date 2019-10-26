@@ -1,10 +1,13 @@
 <?xml version="1.0" encoding="utf-8"?>
-<android.inputmethodservice.KeyboardView
-    xmlns:android="http://schemas.android.com/apk/res/android"
-    android:id="@+id/keyboard_view"
-    android:layout_width="match_parent"
-    android:layout_height="wrap_content"
-    android:keyPreviewLayout="@layout/key_preview"
-    android:layout_alignParentBottom="true">
+<LinearLayout xmlns:android="http://schemas.android.com/apk/res/android"
+    android:orientation="vertical" android:layout_width="match_parent"
+    android:layout_height="match_parent">
 
-</android.inputmethodservice.KeyboardView>
+    <android.inputmethodservice.KeyboardView
+        android:layout_height="wrap_content"
+        android:layout_width="fill_parent"
+        android:id="@+id/keyboardview"
+        android:visibility="gone"
+        android:focusableInTouchMode="true"
+        android:focusable="true" />
+</LinearLayout>
