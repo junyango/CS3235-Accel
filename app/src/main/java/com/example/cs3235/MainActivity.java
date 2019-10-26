@@ -1,6 +1,6 @@
 package com.example.cs3235;
 
-import android.app.AlertDialog;
+import android.annotation.SuppressLint;
 import android.app.ProgressDialog;
 import android.content.Context;
 import android.hardware.Sensor;
@@ -12,13 +12,13 @@ import android.os.Bundle;
 import android.os.CountDownTimer;
 import android.os.SystemClock;
 import android.util.Log;
-import android.view.KeyEvent;
 import android.view.View;
 import android.view.inputmethod.InputMethodManager;
 import android.widget.AdapterView;
 import android.widget.ArrayAdapter;
 import android.widget.Button;
 import android.widget.EditText;
+import android.widget.LinearLayout;
 import android.widget.Spinner;
 import android.widget.TextView;
 import android.widget.Toast;
@@ -69,25 +69,26 @@ public class MainActivity extends AppCompatActivity {
     private boolean isSetPressed;
     private EditText mEditTextInput;
     private Button mButtonSet;
-    public CustomEditText mKeyboard;
+    public EditText mKeyboard;
 
     private TextView mTextViewCountDown;
     private CountDownTimer mCountDownTimer;
     private boolean mTimerRunning;
     private long mStartTimeInMillis;
     private long mTimeLeftInMillis;
+    private LinearLayout layout;
 
     // Firebase storage
     private StorageReference mStorageRef;
     private Uri filePath;
 
+    CustomKeyboard mCustomKeyboard;
+
+    @SuppressLint("ClickableViewAccessibility")
     @Override
     protected void onCreate(Bundle savedInstanceState) {
         super.onCreate(savedInstanceState);
         setContentView(R.layout.activity_main);
-
-        mKeyboard = new CustomEditText(getApplicationContext());
-
         x_accel = findViewById(R.id.xAccel);
         y_accel = findViewById(R.id.yAccel);
         z_accel = findViewById(R.id.zAccel);
@@ -122,8 +123,6 @@ public class MainActivity extends AppCompatActivity {
                 setTimer(millisInput);
                 mEditTextInput.setText("");
                 closeKeyboard();
-
-
             }
         });
 
@@ -201,42 +200,52 @@ public class MainActivity extends AppCompatActivity {
                     mButtonSet.setEnabled(false);
                     startBtn.setEnabled(false);
                     mKeyboard.setVisibility(View.VISIBLE);
-                    mKeyboard.requestFocus();
-                    InputMethodManager imm = (InputMethodManager) getSystemService(Context.INPUT_METHOD_SERVICE);
-                    imm.showSoftInput(mKeyboard, InputMethodManager.SHOW_IMPLICIT);
+//                    InputMethodManager imm = (InputMethodManager) getSystemService(Context.INPUT_METHOD_SERVICE);
+//                    imm.showSoftInput(mKeyboard, InputMethodManager.SHOW_IMPLICIT);
                 }
 
             }
         });
-
-        mKeyboard.setOnKeyListener(new View.OnKeyListener() {
-                                       @Override
-                                       public boolean onKey(View v, int keyCode, KeyEvent event) {
-                                           if(event.getAction() == KeyEvent.ACTION_DOWN) {
-                                               Log.d(TAG, "Tapped");
-                                               try {
-                                                   writer.write(String.format(Locale.getDefault(), "%s, %f, %f, %f, %s\n", SystemClock.elapsedRealtimeNanos(),
-                                                           -3.0, -3.0, -3.0, "Tapped"));
-                                                   writer.flush();
-                                               } catch (IOException io) {
-                                                   Log.d(TAG, "Input output exception!" + io);
-                                               }
-                                               return false;
-                                           }
-                                           else if(event.getAction() == KeyEvent.ACTION_UP) {
-                                               Log.d(TAG, "Released");
-                                               try {
-                                                   writer.write(String.format(Locale.getDefault(), "%s, %f, %f, %f, %s\n", SystemClock.elapsedRealtimeNanos(),
-                                                           -3.0, -3.0, -3.0, "Released"));
-                                                   writer.flush();
-                                               } catch (IOException io) {
-                                                   Log.d(TAG, "Input output exception!" + io);
-                                               }
-                                               return false;
-                                           }
-                                           return false;
-                                       }
-                                   });
+//        mKeyboard.setOnTouchListener(new View.OnTouchListener() {
+//            @Override
+//            public boolean onTouch(View v, MotionEvent event) {
+//                if(mKeyboard.hasFocus()) {
+//                    customKeyboard.showCustomKeyboard(v);
+//                } else {
+//                    customKeyboard.hideCustomKeyboard();
+//                }
+//                return false;
+//
+//            }
+//        });
+//        mKeyboard.setOnKeyListener(new View.OnKeyListener() {
+//                                       @Override
+//                                       public boolean onKey(View v, int keyCode, KeyEvent event) {
+//                                           if(event.getAction() == KeyEvent.ACTION_DOWN) {
+//                                               Log.d(TAG, "Tapped");
+//                                               try {
+//                                                   writer.write(String.format(Locale.getDefault(), "%s, %f, %f, %f, %s\n", SystemClock.elapsedRealtimeNanos(),
+//                                                           -3.0, -3.0, -3.0, "Tapped"));
+//                                                   writer.flush();
+//                                               } catch (IOException io) {
+//                                                   Log.d(TAG, "Input output exception!" + io);
+//                                               }
+//                                               return false;
+//                                           }
+//                                           else if(event.getAction() == KeyEvent.ACTION_UP) {
+//                                               Log.d(TAG, "Released");
+//                                               try {
+//                                                   writer.write(String.format(Locale.getDefault(), "%s, %f, %f, %f, %s\n", SystemClock.elapsedRealtimeNanos(),
+//                                                           -3.0, -3.0, -3.0, "Released"));
+//                                                   writer.flush();
+//                                               } catch (IOException io) {
+//                                                   Log.d(TAG, "Input output exception!" + io);
+//                                               }
+//                                               return false;
+//                                           }
+//                                           return false;
+//                                       }
+//                                   });
 
         // Setting up for spinner
         ArrayAdapter < CharSequence > adapter = ArrayAdapter.createFromResource(MainActivity.this, R.array.refresh_rate, android.R.layout.simple_spinner_item);

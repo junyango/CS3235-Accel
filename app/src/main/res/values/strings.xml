@@ -12,4 +12,6 @@
     <string name="secondsHint">Seconds</string>
     <string name="uploadBtn">Upload</string>
     <string name="selectBtn">Select File</string>
+    <string name="simple_ime">Simple IME</string>
+    <string name="subtype_en_US">English (US)</string>
 </resources>
