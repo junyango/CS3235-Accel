@@ -1,7 +1,6 @@
 package com.example.cs3235;
 
 import android.annotation.SuppressLint;
-import android.app.Activity;
 import android.app.ProgressDialog;
 import android.content.Context;
 import android.hardware.Sensor;
@@ -9,6 +8,8 @@ import android.hardware.SensorEvent;
 import android.hardware.SensorEventListener;
 import android.hardware.SensorManager;
 import android.inputmethodservice.KeyboardView;
+import android.net.ConnectivityManager;
+import android.net.NetworkInfo;
 import android.net.Uri;
 import android.os.Bundle;
 import android.os.CountDownTimer;
@@ -106,7 +107,7 @@ public class MainActivity extends AppCompatActivity {
         startBtn = findViewById(R.id.startBtn);
         mKeyboard = findViewById(R.id.keyboard);
 
-        mCustomKeyboard= new CustomKeyboard(this, R.id.keyboardview, R.xml.number_pad);
+        mCustomKeyboard= new CustomKeyboard(this, R.id.keyboardview, R.xml.keyboard_layout);
         mCustomKeyboard.registerEditText(R.id.keyboard);
         mCustomKeyboardView = mCustomKeyboard.getmKeyboardView();
         getWindow().setSoftInputMode(WindowManager.LayoutParams.SOFT_INPUT_ADJUST_PAN);
@@ -370,33 +371,38 @@ public class MainActivity extends AppCompatActivity {
                 final ProgressDialog progressDialog = new ProgressDialog(MainActivity.this);
                 progressDialog.setTitle("Progress...");
 
-                csvRef.putFile(file)
-                        .addOnSuccessListener(new OnSuccessListener<UploadTask.TaskSnapshot>() {
-                            @Override
-                            public void onSuccess(UploadTask.TaskSnapshot taskSnapshot) {
-                                Toast.makeText(MainActivity.this, "Successful", Toast.LENGTH_SHORT).show();
-                                progressDialog.dismiss();
-                            }
-                        })
-                        .addOnFailureListener(new OnFailureListener() {
-                            @Override
-                            public void onFailure(@NonNull Exception exception) {
-                                // Handle unsuccessful uploads
-                                Toast.makeText(MainActivity.this, "Not Successful", Toast.LENGTH_SHORT).show();
-                            }
-                        })
-                        .addOnProgressListener(new OnProgressListener<UploadTask.TaskSnapshot>() {
-                            @Override
-                            public void onProgress(UploadTask.TaskSnapshot taskSnapshot) {
-                                //calculating progress percentage
-                                double progress = (100.0 * taskSnapshot.getBytesTransferred()) / taskSnapshot.getTotalByteCount();
+                if (isConnectedInternet()) {
+                    csvRef.putFile(file)
+                            .addOnSuccessListener(new OnSuccessListener<UploadTask.TaskSnapshot>() {
+                                @Override
+                                public void onSuccess(UploadTask.TaskSnapshot taskSnapshot) {
+                                    Toast.makeText(MainActivity.this, "Successful", Toast.LENGTH_SHORT).show();
+                                    progressDialog.dismiss();
+                                }
+                            })
+                            .addOnFailureListener(new OnFailureListener() {
+                                @Override
+                                public void onFailure(@NonNull Exception exception) {
+                                    // Handle unsuccessful uploads
+                                    Toast.makeText(MainActivity.this, "Not Successful", Toast.LENGTH_SHORT).show();
+                                }
+                            })
+                            .addOnProgressListener(new OnProgressListener<UploadTask.TaskSnapshot>() {
+                                @Override
+                                public void onProgress(UploadTask.TaskSnapshot taskSnapshot) {
+                                    //calculating progress percentage
+                                    double progress = (100.0 * taskSnapshot.getBytesTransferred()) / taskSnapshot.getTotalByteCount();
 
-                                //displaying percentage in progress dialog
-                                progressDialog.setMessage("Uploaded " + (int)(progress) + "%...");
-                                progressDialog.show();
+                                    //displaying percentage in progress dialog
+                                    progressDialog.setMessage("Uploaded " + (int)(progress) + "%...");
+                                    progressDialog.show();
 
-                            }
-                        });
+                                }
+                            });
+                } else {
+                    Toast.makeText(MainActivity.this, "No Internet connection; Not uploaded", Toast.LENGTH_LONG).show();
+                }
+
             }
         }.start();
 
@@ -452,5 +458,15 @@ public class MainActivity extends AppCompatActivity {
         mCustomKeyboardView.setEnabled(false);
     }
 
+    public boolean isConnectedInternet() {
+        ConnectivityManager connectivityManager = (ConnectivityManager)getSystemService(Context.CONNECTIVITY_SERVICE);
+        if(connectivityManager.getNetworkInfo(ConnectivityManager.TYPE_MOBILE).getState() == NetworkInfo.State.CONNECTED ||
+                connectivityManager.getNetworkInfo(ConnectivityManager.TYPE_WIFI).getState() == NetworkInfo.State.CONNECTED) {
+            //we are connected to a network
+            return true;
+        }
+        else
+            return false;
+    }
 }
 
