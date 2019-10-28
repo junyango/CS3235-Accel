@@ -1,41 +1,21 @@
 package com.example.cs3235;
 
-//import android.app.Activity;
-//import android.os.Bundle;
-//
-//public class MainActivity extends Activity {
-//
-//    CustomKeyboard mCustomKeyboard;
-//
-//    @Override protected void onCreate(Bundle savedInstanceState) {
-//        super.onCreate(savedInstanceState);
-//        setContentView(R.layout.activity_main);
-//
-//        mCustomKeyboard= new CustomKeyboard(this, R.id.keyboardview, R.xml.number_pad);
-//
-//        mCustomKeyboard.registerEditText(R.id.keyboard);
-//    }
-//
-//    @Override public void onBackPressed() {
-//        // NOTE Trap the back key: when the CustomKeyboard is still visible hide it, only when it is invisible, finish activity
-//        if( mCustomKeyboard.isCustomKeyboardVisible() ) mCustomKeyboard.hideCustomKeyboard(); else this.finish();
-//    }
-//
-//}
-
-
 import android.annotation.SuppressLint;
+import android.app.Activity;
 import android.app.ProgressDialog;
 import android.content.Context;
 import android.hardware.Sensor;
 import android.hardware.SensorEvent;
 import android.hardware.SensorEventListener;
 import android.hardware.SensorManager;
+import android.inputmethodservice.KeyboardView;
 import android.net.Uri;
 import android.os.Bundle;
 import android.os.CountDownTimer;
 import android.os.SystemClock;
+import android.text.Editable;
 import android.util.Log;
+import android.view.MotionEvent;
 import android.view.View;
 import android.view.WindowManager;
 import android.view.inputmethod.InputMethodManager;
@@ -43,7 +23,6 @@ import android.widget.AdapterView;
 import android.widget.ArrayAdapter;
 import android.widget.Button;
 import android.widget.EditText;
-import android.widget.LinearLayout;
 import android.widget.Spinner;
 import android.widget.TextView;
 import android.widget.Toast;
@@ -81,7 +60,6 @@ public class MainActivity extends AppCompatActivity {
     String fileDir;
 
     // Variables for Sensors
-    private TextView x_accel, y_accel, z_accel;
     private SensorManager sensorManager;
     private Sensor accelerometer;
     private Sensor gyroscope;
@@ -101,22 +79,26 @@ public class MainActivity extends AppCompatActivity {
     private boolean mTimerRunning;
     private long mStartTimeInMillis;
     private long mTimeLeftInMillis;
-    private LinearLayout layout;
 
     // Firebase storage
     private StorageReference mStorageRef;
     private Uri filePath;
 
+    // Keyboard objects
     private CustomKeyboard mCustomKeyboard;
+    private KeyboardView mCustomKeyboardView;
+
+    // Coordinate variables
+    private int xCoordinates;
+    private int yCoordinates;
+    private float accelX_value, accelY_value, accelZ_value;
+    private float gyroX_value, gyroY_value, gyroZ_value;
 
     @SuppressLint("ClickableViewAccessibility")
     @Override
     protected void onCreate(Bundle savedInstanceState) {
         super.onCreate(savedInstanceState);
         setContentView(R.layout.activity_main);
-        x_accel = findViewById(R.id.xAccel);
-        y_accel = findViewById(R.id.yAccel);
-        z_accel = findViewById(R.id.zAccel);
         mTextViewCountDown = findViewById(R.id.text_view_countdown);
         mEditTextInput = findViewById(R.id.mEditTimer);
         mButtonSet = findViewById(R.id.setBtn);
@@ -126,8 +108,69 @@ public class MainActivity extends AppCompatActivity {
 
         mCustomKeyboard= new CustomKeyboard(this, R.id.keyboardview, R.xml.number_pad);
         mCustomKeyboard.registerEditText(R.id.keyboard);
-
+        mCustomKeyboardView = mCustomKeyboard.getmKeyboardView();
         getWindow().setSoftInputMode(WindowManager.LayoutParams.SOFT_INPUT_ADJUST_PAN);
+
+        mCustomKeyboardView.setOnKeyboardActionListener(new KeyboardView.OnKeyboardActionListener() {
+            @Override
+            public void onKey(int primaryCode, int[] keyCodes) {
+                int CodeDelete   = -5; // Keyboard.KEYCODE_DELETE
+                int CodeCancel   = -3; // Keyboard.KEYCODE_CANCEL
+
+                View focusCurrent = getWindow().getCurrentFocus();
+                // if( focusCurrent==null || focusCurrent.getClass()!=EditText.class ) return;
+                EditText edittext = (EditText) focusCurrent;
+                Editable editable = edittext.getText();
+                int start = edittext.getSelectionStart();
+                // Apply the key to the edittext
+                if( primaryCode==CodeCancel ) {
+                    hideCustomKeyboard();
+                } else if( primaryCode==CodeDelete ) {
+                    if( editable!=null && start>0 ) editable.delete(start - 1, start);
+                } else { // insert character
+                    editable.insert(start, Character.toString((char) primaryCode));
+                }
+            }
+
+            @Override public void onPress(int arg0) {
+                Log.d("Debugging", "tapped");
+                try {
+                    writer.write(String.format(Locale.getDefault(), "%f, %f, %s, %s, %f, %f, %f\n", -1.0, -1.0, "tapped",
+                            SystemClock.elapsedRealtimeNanos(), -1.0, -1.0, -1.0));
+                    writer.flush();
+                } catch (IOException io) {
+                    Log.d(TAG, "Input output exception!" + io);
+                }
+            }
+
+            @Override public void onRelease(int primaryCode) {
+                Log.d("Debugging", "released");
+                try {
+                    writer.write(String.format(Locale.getDefault(), "%f, %f, %s, %s, %f, %f, %f\n", -1.0, -1.0,
+                            "released", SystemClock.elapsedRealtimeNanos(), -1.0, -1.0, -1.0));
+                    writer.flush();
+                } catch (IOException io) {
+                    Log.d(TAG, "Input output exception!" + io);
+                }
+                xCoordinates = 0;
+                yCoordinates = 0;
+            }
+
+            @Override public void onText(CharSequence text) {
+            }
+
+            @Override public void swipeDown() {
+            }
+
+            @Override public void swipeLeft() {
+            }
+
+            @Override public void swipeRight() {
+            }
+
+            @Override public void swipeUp() {
+            }
+    });
 
         // Firebase storage
         mStorageRef = FirebaseStorage.getInstance("gs://cs3235-92947.appspot.com").getReference();
@@ -171,29 +214,32 @@ public class MainActivity extends AppCompatActivity {
             // Declaring variables to store sensor values to be input to writer library
             @Override
             public void onSensorChanged(SensorEvent event) {
-                float accelX_value, accelY_value, accelZ_value;
-                float gyroX_value, gyroY_value, gyroZ_value;
+                String sensorName;
                 Sensor sensor = event.sensor;
                 if (isStartPressed && mTimerRunning && isSetPressed) {
                     if (sensor.getType() == Sensor.TYPE_ACCELEROMETER) {
+                        sensorName = "accel";
                         accelX_value = event.values[0];
                         accelY_value = event.values[1];
                         accelZ_value = event.values[2];
                         try {
-                            writer.write(String.format(Locale.getDefault(), "%s, %f, %f, %f, %s\n", SystemClock.elapsedRealtimeNanos(),
-                                    accelX_value, accelY_value, accelZ_value, "accel"));
+                            writer.write(String.format(Locale.getDefault(), "%d, %d, %s, %s, %f, %f, %f\n", xCoordinates, yCoordinates,
+                                    sensorName, SystemClock.elapsedRealtimeNanos(),
+                                    accelX_value, accelY_value, accelZ_value));
                             writer.flush();
                         } catch (IOException io) {
                             Log.d(TAG, "Input output exception!" + io);
                         }
                     }
                     else if (sensor.getType() == Sensor.TYPE_GYROSCOPE) {
+                        sensorName = "gyro";
                         gyroX_value = event.values[0];
                         gyroY_value = event.values[1];
                         gyroZ_value = event.values[2];
                         try {
-                            writer.write(String.format(Locale.getDefault(), "%s, %f, %f, %f, %s\n", SystemClock.elapsedRealtimeNanos(),
-                                    gyroX_value, gyroY_value, gyroZ_value, "gyro"));
+                            writer.write(String.format(Locale.getDefault(), "%d, %d, %s, %s, %f, %f, %f\n", xCoordinates, yCoordinates,
+                                    sensorName, SystemClock.elapsedRealtimeNanos(),
+                                    gyroX_value, gyroY_value, gyroZ_value));
                             writer.flush();
                         } catch (IOException io) {
                             Log.d(TAG, "Input output exception!" + io);
@@ -230,41 +276,21 @@ public class MainActivity extends AppCompatActivity {
                     mButtonSet.setEnabled(false);
                     startBtn.setEnabled(false);
                     mKeyboard.setVisibility(View.VISIBLE);
-//                    mKeyboard.requestFocus();
-//                    InputMethodManager imm = (InputMethodManager) getSystemService(Context.INPUT_METHOD_SERVICE);
-//                    imm.showSoftInput(mKeyboard, InputMethodManager.SHOW_IMPLICIT);
+                    mKeyboard.requestFocus();
                 }
 
             }
         });
-//        mKeyboard.setOnKeyListener(new View.OnKeyListener() {
-//                                       @Override
-//                                       public boolean onKey(View v, int keyCode, KeyEvent event) {
-//                                           if(event.getAction() == KeyEvent.ACTION_DOWN) {
-//                                               Log.d(TAG, "Tapped");
-//                                               try {
-//                                                   writer.write(String.format(Locale.getDefault(), "%s, %f, %f, %f, %s\n", SystemClock.elapsedRealtimeNanos(),
-//                                                           -3.0, -3.0, -3.0, "Tapped"));
-//                                                   writer.flush();
-//                                               } catch (IOException io) {
-//                                                   Log.d(TAG, "Input output exception!" + io);
-//                                               }
-//                                               return false;
-//                                           }
-//                                           else if(event.getAction() == KeyEvent.ACTION_UP) {
-//                                               Log.d(TAG, "Released");
-//                                               try {
-//                                                   writer.write(String.format(Locale.getDefault(), "%s, %f, %f, %f, %s\n", SystemClock.elapsedRealtimeNanos(),
-//                                                           -3.0, -3.0, -3.0, "Released"));
-//                                                   writer.flush();
-//                                               } catch (IOException io) {
-//                                                   Log.d(TAG, "Input output exception!" + io);
-//                                               }
-//                                               return false;
-//                                           }
-//                                           return false;
-//                                       }
-//                                   });
+        mCustomKeyboardView.setOnTouchListener(new View.OnTouchListener() {
+            @Override
+            public boolean onTouch(View v, MotionEvent event) {
+                xCoordinates = (int)(event.getX());
+                yCoordinates = (int)(event.getY());
+                Log.d("Debugging", "X = " + event.getX() + " - " + "Y = " + event.getY());
+                // Return false to avoid consuming the touch event
+                return false;
+            }
+        });
 
         // Setting up for spinner
         ArrayAdapter < CharSequence > adapter = ArrayAdapter.createFromResource(MainActivity.this, R.array.refresh_rate, android.R.layout.simple_spinner_item);
@@ -332,7 +358,7 @@ public class MainActivity extends AppCompatActivity {
                 isStartPressed = false;
                 mButtonSet.setEnabled(true);
                 startBtn.setEnabled(true);
-                closeKeyboard();
+                hideCustomKeyboard();
                 mKeyboard.setText("");
                 try {
                     writer.close();
@@ -385,21 +411,13 @@ public class MainActivity extends AppCompatActivity {
 
         mTextViewCountDown.setText(timeLeftFormatted);
     }
-    private void closeKeyboard() {
-        View view = this.getCurrentFocus();
-        if (view != null) {
-            InputMethodManager imm = (InputMethodManager) getSystemService(INPUT_METHOD_SERVICE);
-            imm.hideSoftInputFromWindow(view.getWindowToken(), 0);
-        }
-    }
 
-    // DELAY refers to the refresh rate
-    // Default = UI setting
+   /** Default setting to be 100hz (Fastest) */
     @Override
     protected void onResume() {
         super.onResume();
-        sensorManager.registerListener(sensorEventListener, accelerometer, SensorManager.SENSOR_DELAY_GAME);
-        sensorManager.registerListener(sensorEventListener, gyroscope, SensorManager.SENSOR_DELAY_GAME);
+        sensorManager.registerListener(sensorEventListener, accelerometer, SensorManager.SENSOR_DELAY_FASTEST);
+        sensorManager.registerListener(sensorEventListener, gyroscope, SensorManager.SENSOR_DELAY_FASTEST);
     }
 
     @Override
@@ -408,12 +426,30 @@ public class MainActivity extends AppCompatActivity {
         sensorManager.unregisterListener(sensorEventListener);
     }
 
+    /** Returns storage directory from Android Phone */
     private String getStorageDir() {
         return this.getExternalFilesDir(null).getAbsolutePath();
     }
-    @Override public void onBackPressed() {
-        // NOTE Trap the back key: when the CustomKeyboard is still visible hide it, only when it is invisible, finish activity
+
+    /** NOTE Trap the back key: when the CustomKeyboard is still visible hide it, only when it is invisible, finish activity */
+    @Override
+    public void onBackPressed() {
         if( mCustomKeyboard.isCustomKeyboardVisible() ) mCustomKeyboard.hideCustomKeyboard(); else this.finish();
+    }
+
+    /** Hide Android native Keyboard */
+    private void closeKeyboard() {
+        View view = this.getCurrentFocus();
+        if (view != null) {
+            InputMethodManager imm = (InputMethodManager) getSystemService(INPUT_METHOD_SERVICE);
+            imm.hideSoftInputFromWindow(view.getWindowToken(), 0);
+        }
+    }
+
+    /** Make the CustomKeyboard invisible. */
+    public void hideCustomKeyboard() {
+        mCustomKeyboardView.setVisibility(View.GONE);
+        mCustomKeyboardView.setEnabled(false);
     }
 
 }

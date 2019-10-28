@@ -21,14 +21,11 @@ package com.example.cs3235;
 
 import android.annotation.SuppressLint;
 import android.app.Activity;
-import android.inputmethodservice.InputMethodService;
 import android.inputmethodservice.Keyboard;
 import android.inputmethodservice.KeyboardView;
 import android.inputmethodservice.KeyboardView.OnKeyboardActionListener;
 import android.text.Editable;
 import android.text.InputType;
-import android.util.Log;
-import android.view.KeyEvent;
 import android.view.MotionEvent;
 import android.view.View;
 import android.view.View.OnClickListener;
@@ -38,34 +35,25 @@ import android.view.WindowManager;
 import android.view.inputmethod.InputMethodManager;
 import android.widget.EditText;
 
-/**
- * When an activity hosts a keyboardView, this class allows several EditText's to register for it.
- *
- * @author Maarten Pennings
- * @date   2012 December 23
- */
 class CustomKeyboard {
-
-    /** A link to the KeyboardView that is used to render this CustomKeyboard. */
     private KeyboardView mKeyboardView;
-    /** A link to the activity that hosts the {@link #mKeyboardView}. */
     private Activity mHostActivity;
 
-    /** The key (code) handler. */
-    private OnKeyboardActionListener mOnKeyboardActionListener = new OnKeyboardActionListener() {
+    public OnKeyboardActionListener mOnKeyboardActionListener = new OnKeyboardActionListener() {
 
         public final static int CodeDelete   = -5; // Keyboard.KEYCODE_DELETE
         public final static int CodeCancel   = -3; // Keyboard.KEYCODE_CANCEL
+        public final static int CodePrev     = 55000;
         public final static int CodeAllLeft  = 55001;
         public final static int CodeLeft     = 55002;
         public final static int CodeRight    = 55003;
         public final static int CodeAllRight = 55004;
+        public final static int CodeNext     = 55005;
         public final static int CodeClear    = 55006;
+
 
         @Override
         public void onKey(int primaryCode, int[] keyCodes) {
-            // NOTE We can say '<Key android:codes="49,50" ... >' in the xml file; all codes come in keyCodes, the first in this list in primaryCode
-            // Get the EditText and its Editable
             View focusCurrent = mHostActivity.getWindow().getCurrentFocus();
             // if( focusCurrent==null || focusCurrent.getClass()!=EditText.class ) return;
             EditText edittext = (EditText) focusCurrent;
@@ -76,27 +64,16 @@ class CustomKeyboard {
                 hideCustomKeyboard();
             } else if( primaryCode==CodeDelete ) {
                 if( editable!=null && start>0 ) editable.delete(start - 1, start);
-            } else if( primaryCode==CodeClear ) {
-                if( editable!=null ) editable.clear();
-            } else if( primaryCode==CodeLeft ) {
-                if( start>0 ) edittext.setSelection(start - 1);
-            } else if( primaryCode==CodeRight ) {
-                if (start < edittext.length()) edittext.setSelection(start + 1);
-            } else if( primaryCode==CodeAllLeft ) {
-                edittext.setSelection(0);
-            } else if( primaryCode==CodeAllRight ) {
-                edittext.setSelection(edittext.length());
             } else { // insert character
                 editable.insert(start, Character.toString((char) primaryCode));
             }
         }
 
+
         @Override public void onPress(int arg0) {
-            Log.d("Debugging", "tapped");
         }
 
         @Override public void onRelease(int primaryCode) {
-            Log.d("Debugging", "released");
         }
 
         @Override public void onText(CharSequence text) {
@@ -128,24 +105,14 @@ class CustomKeyboard {
      */
     @SuppressLint("ClickableViewAccessibility")
     public CustomKeyboard(Activity host, int viewid, int layoutid) {
-        mHostActivity= host;
-        mKeyboardView= (KeyboardView)mHostActivity.findViewById(viewid);
-        mKeyboardView.setKeyboard(new Keyboard(mHostActivity, layoutid));
-        mKeyboardView.setPreviewEnabled(false); // NOTE Do not show the preview balloons
-        mKeyboardView.setOnKeyboardActionListener(mOnKeyboardActionListener);
-        // Hide the standard keyboard initially
-        mHostActivity.getWindow().setSoftInputMode(WindowManager.LayoutParams.SOFT_INPUT_STATE_ALWAYS_HIDDEN);
+            mHostActivity= host;
+            mKeyboardView= (KeyboardView)mHostActivity.findViewById(viewid);
+            mKeyboardView.setKeyboard(new Keyboard(mHostActivity, layoutid));
+            mKeyboardView.setPreviewEnabled(false); // NOTE Do not show the preview balloons
+            mKeyboardView.setOnKeyboardActionListener(mOnKeyboardActionListener);
+            // Hide the standard keyboard initially
+            mHostActivity.getWindow().setSoftInputMode(WindowManager.LayoutParams.SOFT_INPUT_STATE_ALWAYS_HIDDEN);
 
-        // Set the onTouchListener to be able to retrieve a MotionEvent
-        mKeyboardView.setOnTouchListener(new OnTouchListener() {
-            @Override
-            public boolean onTouch(View v, MotionEvent event) {
-                // For each key in the key list
-                Log.d("Debugging", "X = " + event.getX() + " - " + "Y = " + event.getY());
-                // Return false to avoid consuming the touch event
-                return false;
-            }
-        });
     }
 
     /** Returns whether the CustomKeyboard is visible. */
@@ -203,6 +170,9 @@ class CustomKeyboard {
         });
         // Disable spell check (hex strings look like words to Android)
         edittext.setInputType(edittext.getInputType() | InputType.TYPE_TEXT_FLAG_NO_SUGGESTIONS);
+    }
+    public KeyboardView getmKeyboardView() {
+        return mKeyboardView;
     }
 
 }

@@ -1,126 +1,95 @@
 <?xml version="1.0" encoding="utf-8"?>
 <RelativeLayout xmlns:android="http://schemas.android.com/apk/res/android"
-    xmlns:tools="http://schemas.android.com/tools"
-    android:layout_width="match_parent"
-    android:layout_height="match_parent"
-    android:orientation="vertical"
-    android:fitsSystemWindows="true"
-    tools:context=".MainActivity"
-    tools:showIn="@layout/activity_main">
-
-    <TextView
-        android:id="@+id/xAccel"
+        xmlns:tools="http://schemas.android.com/tools"
         android:layout_width="match_parent"
-        android:layout_height="wrap_content"
-        android:padding="10dp"
-        android:layout_alignParentTop="true"
-        android:textColor="@color/colorPrimaryDark"
-        />
+        android:layout_height="match_parent"
+        android:orientation="vertical"
+        android:fitsSystemWindows="true"
+        tools:context=".MainActivity"
+        tools:showIn="@layout/activity_main">
 
-    <TextView
-        android:id="@+id/yAccel"
-        android:layout_width="match_parent"
-        android:layout_height="wrap_content"
-        android:layout_below="@id/xAccel"
-        android:layout_marginTop="5dp"
-        android:padding="10dp"
-        android:textColor="@color/colorPrimaryDark" />
+        <TextView
+            android:id="@+id/spinnerTitle"
+            android:layout_width="wrap_content"
+            android:layout_height="wrap_content"
+            android:layout_marginTop="10dp"
+            android:padding="10dp"
+            android:text="@string/spinnerText"
+            android:textColor="@color/colorPrimaryDark" />
 
-    <TextView
-        android:id="@+id/zAccel"
-        android:layout_width="match_parent"
-        android:layout_height="wrap_content"
-        android:layout_below="@id/yAccel"
-        android:layout_marginTop="5dp"
-        android:padding="10dp"
-        android:textColor="@color/colorPrimaryDark" />
+        <Spinner
+            android:id="@+id/refresh_spinner"
+            android:layout_width="match_parent"
+            android:layout_height="wrap_content"
+            android:layout_below="@id/spinnerTitle"
+            android:layout_marginTop="10dp" />
 
-    <TextView
-        android:id="@+id/spinnerTitle"
-        android:layout_width="wrap_content"
-        android:layout_height="wrap_content"
-        android:layout_below="@id/zAccel"
-        android:layout_marginTop="10dp"
-        android:padding="10dp"
-        android:text="@string/spinnerText"
-        android:textColor="@color/colorPrimaryDark" />
+        <TextView
+            android:id="@+id/editText_title"
+            android:layout_width="match_parent"
+            android:layout_height="wrap_content"
+            android:layout_marginTop="10dp"
+            android:layout_below="@id/refresh_spinner"
+            android:padding="10dp"
+            android:text="@string/editTextTitle"
+            android:textColor="@color/colorPrimaryDark" />
 
-    <Spinner
-        android:id="@+id/refresh_spinner"
-        android:layout_width="match_parent"
-        android:layout_height="wrap_content"
-        android:layout_below="@id/spinnerTitle"
-        android:layout_marginTop="10dp" />
+        <EditText
+            android:id="@+id/mEditTimer"
+            android:layout_width="match_parent"
+            android:layout_height="wrap_content"
+            android:layout_marginTop="10dp"
+            android:layout_below="@id/editText_title"
+            android:hint="@string/secondsHint"
+            android:importantForAutofill="no"
+            android:inputType="number"
+            android:maxLength="4" />
 
-    <TextView
-        android:id="@+id/editText_title"
-        android:layout_width="match_parent"
-        android:layout_height="wrap_content"
-        android:layout_below="@id/refresh_spinner"
-        android:layout_marginTop="30dp"
-        android:padding="10dp"
-        android:text="@string/editTextTitle"
-        android:textColor="@color/colorPrimaryDark" />
+        <Button
+            android:id="@+id/setBtn"
+            android:layout_width="match_parent"
+            android:layout_height="wrap_content"
+            android:layout_below="@id/mEditTimer"
+            android:text="Set" />
 
-    <EditText
-        android:id="@+id/mEditTimer"
-        android:layout_width="match_parent"
-        android:layout_height="wrap_content"
-        android:layout_below="@id/editText_title"
-        android:layout_marginTop="10dp"
-        android:hint="@string/secondsHint"
-        android:importantForAutofill="no"
-        android:inputType="number"
-        android:maxLength="4" />
+        <TextView
+            android:id="@+id/text_view_countdown"
+            android:layout_width="wrap_content"
+            android:layout_height="wrap_content"
+            android:layout_below="@id/setBtn"
+            android:layout_marginTop="5dp"
+            android:text="00:00"
+            android:layout_gravity="center"
+            android:layout_centerHorizontal="true"
+            android:textColor="@android:color/black"
+            android:textSize="30sp" />
 
-    <Button
-        android:id="@+id/setBtn"
-        android:layout_width="match_parent"
-        android:layout_height="wrap_content"
-        android:layout_below="@id/mEditTimer"
-        android:text="Set" />
+        <Button
+            android:id="@+id/startBtn"
+            android:layout_width="wrap_content"
+            android:layout_gravity="center"
+            android:layout_height="wrap_content"
+            android:layout_below="@id/text_view_countdown"
+            android:layout_centerHorizontal="true"
+            android:layout_marginTop="10dp"
+            android:text="@string/startBtn" />
 
-    <TextView
-        android:id="@+id/text_view_countdown"
-        android:layout_width="wrap_content"
-        android:layout_height="wrap_content"
-        android:layout_below="@id/setBtn"
-        android:layout_marginTop="20dp"
-        android:text="00:00"
-        android:layout_centerHorizontal="true"
-        android:textColor="@android:color/black"
-        android:textSize="40sp" />
+        <EditText
+            android:id="@+id/keyboard"
+            android:layout_width="match_parent"
+            android:layout_height="wrap_content"
+            android:layout_marginTop="2dp"
+            android:layout_below="@id/startBtn"
+            android:inputType="text" />
 
-    <Button
-        android:id="@+id/startBtn"
-        android:layout_width="wrap_content"
-        android:layout_height="wrap_content"
-        android:layout_below="@id/text_view_countdown"
-        android:layout_centerHorizontal="true"
-        android:layout_marginTop="20dp"
-        android:text="@string/startBtn" />
-
-    <EditText
-        android:id="@+id/keyboard"
-        android:layout_width="match_parent"
-        android:layout_height="wrap_content"
-        android:layout_below="@id/startBtn"
-        android:layout_marginTop="10dp"
-        android:imeOptions="actionDone"
-        android:importantForAutofill="no"
-        android:layout_centerHorizontal="true"
-        android:inputType="text" />
-
-    <!-- NOTE No need to develop a system service for keyboard, there is a standard View for that (well, not completely standard, its in a funny package 'android.inputmethodservice'. -->
-    <!-- NOTE The graphical layout does not know the package ('java.lang.NoClassDefFoundError: Could not initialize class android.inputmethodservice.KeyboardView') so the keyboard is not shown. -->
-    <android.inputmethodservice.KeyboardView
-        android:id="@+id/keyboardview"
-        android:layout_width="fill_parent"
-        android:layout_height="wrap_content"
-        android:focusable="true"
-        android:focusableInTouchMode="true"
-        android:visibility="gone"
-        android:layout_alignParentBottom="true" />
+        <android.inputmethodservice.KeyboardView
+            android:id="@+id/keyboardview"
+            android:layout_width="fill_parent"
+            android:layout_height="wrap_content"
+            android:focusable="true"
+            android:focusableInTouchMode="true"
+            android:visibility="gone"
+            android:layout_alignParentBottom="true"
+            />
 
 </RelativeLayout>
-
