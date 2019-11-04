@@ -16,6 +16,10 @@ import android.view.WindowManager;
 import android.view.inputmethod.InputMethodManager;
 import android.widget.EditText;
 
+/*
+Credits to http://www.fampennings.nl/maarten/android/09keyboard/index.htm for providing a guide on how to
+create a CustomKeyBoard
+ */
 class CustomKeyboard {
     private KeyboardView mKeyboardView;
     private Activity mHostActivity;
@@ -24,7 +28,6 @@ class CustomKeyboard {
 
         public final static int CodeDelete   = -5; // Keyboard.KEYCODE_DELETE
         public final static int CodeCancel   = -3; // Keyboard.KEYCODE_CANCEL
-        public final static int CodeCaps   = -1; // Keyboard.KEYCODE_CAPS
 
         @Override
         public void onKey(int primaryCode, int[] keyCodes) {
@@ -66,17 +69,6 @@ class CustomKeyboard {
         }
     };
 
-    /**
-     * Create a custom keyboard, that uses the KeyboardView (with resource id <var>viewid</var>) of the <var>host</var> activity,
-     * and load the keyboard layout from xml file <var>layoutid</var> (see {@link Keyboard} for description).
-     * Note that the <var>host</var> activity must have a <var>KeyboardView</var> in its layout (typically aligned with the bottom of the activity).
-     * Note that the keyboard layout xml file may include key codes for navigation; see the constants in this class for their values.
-     * Note that to enable EditText's to use this custom keyboard, call the {@link #registerEditText(int)}.
-     *
-     * @param host The hosting activity.
-     * @param viewid The id of the KeyboardView.
-     * @param layoutid The id of the xml file containing the keyboard layout.
-     */
     @SuppressLint("ClickableViewAccessibility")
     public CustomKeyboard(Activity host, int viewid, int layoutid) {
             mHostActivity= host;

@@ -49,8 +49,8 @@ import java.util.Locale;
 public class MainActivity extends AppCompatActivity {
 
     // Global variables
-    private static final String refresh_rate = "100hz";
-    private static final String alphabet = "a";
+    private static final String refresh_rate = "words";
+    private static final String alphabet = "plant";
     private static final String phone = "blue_huawei";
 
     // Used for logging on logcat
